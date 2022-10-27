@@ -3,7 +3,7 @@ import PropTypes from "prop-types"
 
 function ImageGalleryItem() {
   return ( 
-  <li class="gallery-item">
+  <li>
     <img src="" alt="" />
   </li>
    );
