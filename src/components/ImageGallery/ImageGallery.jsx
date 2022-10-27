@@ -5,6 +5,17 @@ class ImageGallery extends Component {
   state = { 
 
   }
+
+  componentDidUpdate(prevProps, prevState) {
+    const prevName = prevProps.pictureName;
+    const nextName = this.props.pictureName;
+
+    if ( prevName !== nextName) {
+      fetch(`https://pixabay.com/api/?q=${nextName}&page=1&key=24021062-33a986e16cffce2cd7c29eb8f&image_type=photo&orientation=horizontal&per_page=12`)
+      .then(res => res.json())
+      .then(console.log)
+    }
+  }
   
 
   render() {
