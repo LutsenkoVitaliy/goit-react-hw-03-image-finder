@@ -2,9 +2,11 @@ import React, { Component } from 'react';
 import ImageGalleryItem from './ImageGalleryItem';
 import Loader from '../Loader';
 
+import { GalleryList } from './ImageGallery.styled';
+
 class ImageGallery extends Component {
   state = { 
-    picture: null,
+    pictures: null,
     error: null,
     status: 'idle',
   }
@@ -13,8 +15,6 @@ class ImageGallery extends Component {
     const prevName = prevProps.pictureName;
     const nextName = this.props.pictureName;
 
-    
-    
     if (prevName !== nextName) {
       this.setState({ status: 'pending' });
 
@@ -25,15 +25,15 @@ class ImageGallery extends Component {
           }
             return Promise.reject(new Error(`Картинки с именем ${nextName} не найдены`));
         })
-        .then(picture => this.setState({ picture, status: 'resolved' }))
+        .then(pictures => this.setState({ pictures, status: 'resolved' }))
         .catch(error => this.setState({ error, status: 'rejected' }))
     }
   }
   
 
   render() {
-    const { picture, status, error } = this.state
-    console.log(picture);
+    const { pictures, status, error } = this.state
+    console.log(pictures);
 
 
     if (status === 'idle') {
@@ -50,14 +50,11 @@ class ImageGallery extends Component {
 
     if (status === 'resolved') { 
       return (
-      <div>
-        <p>{picture.hits[0].tags}</p>
-        <img src={picture.hits[0].previewURL} alt={this.state.picture.hits[0].tags} />
-      </div>
-    )}
-
-        {/* <ImageGalleryItem/> */}
-  }
-}
+      <GalleryList>
+          <ImageGalleryItem pictures={pictures.hits} /> 
+      </GalleryList>     
+      )
+    }
+  }}
 
 export default ImageGallery;
