@@ -6,7 +6,7 @@ class ImageGallery extends Component {
   state = { 
     picture: null,
     error: null,
-    loading: false,
+    status: 'idle',
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -16,49 +16,48 @@ class ImageGallery extends Component {
     
     
     if (prevName !== nextName) {
-      this.setState({ loading: true, picture: null });
+      this.setState({ status: 'pending' });
 
       fetch(`https://pixabay.com/api/?q=${nextName}&page=1&key=24021062-33a986e16cffce2cd7c29eb8f&image_type=photo&orientation=horizontal&per_page=12`)
         .then(response => {
           if (response.ok) {
             return response.json();
           }
-          return Promise.reject(new Error(`Картинки с именем ${nextName} не найдены`))
+            return Promise.reject(new Error(`Картинки с именем ${nextName} не найдены`));
         })
-        .then(picture => this.setState({ picture }))
-        .catch(error => this.setState({ error }))
-        .finally(() => this.setState({ loading: false }));
+        .then(picture => this.setState({ picture, status: 'resolved' }))
+        .catch(error => this.setState({ error, status: 'rejected' }))
     }
   }
   
 
   render() {
-    const { picture, error, loading } = this.state
-    const {pictureName} = this.props
+    const { picture, status, error } = this.state
     console.log(picture);
 
-    return (
+
+    if (status === 'idle') {
+      return <div>Введите имя каринки</div>
+    };
+    
+    if(status === 'pending') {
+      return <Loader />
+    };
+    
+    if (status === 'rejected') {
+      return <h1>{error.message}</h1>
+    }
+
+    if (status === 'resolved') { 
+      return (
       <div>
-        {error && <h1>{error.message}</h1>}
-        {loading && <Loader />}
-        {!pictureName && <div>Введите имя каринки</div>}
-        {picture &&
-          <div>
-            <p>{picture.hits[0].tags}</p>
-            <img src={picture.hits[0].previewURL} alt={this.state.picture.hits[0].tags} />
-          </div>}
-      {/* <ImageGalleryItem/> */}
-    </div>
-    );
+        <p>{picture.hits[0].tags}</p>
+        <img src={picture.hits[0].previewURL} alt={this.state.picture.hits[0].tags} />
+      </div>
+    )}
+
+        {/* <ImageGalleryItem/> */}
   }
 }
 
 export default ImageGallery;
-
-  // componentDidMount() {
-  //   this.setState({loading: true})
-  //   fetch('https://pixabay.com/api/?q=cat&page=1&key=24021062-33a986e16cffce2cd7c29eb8f&image_type=photo&orientation=horizontal&per_page=12')
-  //     .then(res => res.json())
-  //     .then(pictures => this.setState({pictures}))
-  //     .finally(() => this.setState({ loading: false}))
-  // }
