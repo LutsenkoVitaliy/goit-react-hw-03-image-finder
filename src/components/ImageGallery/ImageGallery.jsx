@@ -1,35 +1,56 @@
 import React, { Component } from 'react';
 import ImageGalleryItem from './ImageGalleryItem';
 import Loader from '../Loader';
+import Button from 'components/Button';
 
+import api from 'components/services/pixabay-api';
 import { GalleryList } from './ImageGallery.styled';
 
 class ImageGallery extends Component {
   state = { 
-    pictures: null,
+    pictures: [],
     error: null,
     status: 'idle',
+    page: 1,
   }
 
   componentDidUpdate(prevProps, prevState) {
     const prevName = prevProps.pictureName;
     const nextName = this.props.pictureName;
+    const prevPage = prevState.page;
+    const nextPage = this.state.page
 
     if (prevName !== nextName) {
       this.setState({ status: 'pending' });
 
-      fetch(`https://pixabay.com/api/?q=${nextName}&page=1&key=24021062-33a986e16cffce2cd7c29eb8f&image_type=photo&orientation=horizontal&per_page=12`)
-        .then(response => {
-          if (response.ok) {
-            return response.json();
+      api.fetchPixabayPicture(nextName)
+        .then(pictures => {
+          this.setState({ pictures, status: 'resolved' })
+          if (pictures.total === 0) {
+            return Promise.reject( new Error(`Фото с именем ${nextName} не найдены`))
           }
-            return Promise.reject(new Error(`Картинки с именем ${nextName} не найдены`));
         })
-        .then(pictures => this.setState({ pictures, status: 'resolved' }))
         .catch(error => this.setState({ error, status: 'rejected' }))
     }
-  }
+
+    if (prevPage !== nextPage) {
+      api.fetchPixabayPicture(nextName, nextPage)
+        .then(picture => {
+          this.setState({
+            pictures: nextPage > 1 ?
+              [...prevState.pictures, ...picture.hits] :
+              picture.hits
+        })
+        })
+        .catch(error => this.setState({ error, status: 'rejected' }))
+    }
+  };
   
+  onLoadMore() {
+    this.setState((prevState) => ({
+      page: prevState.page + 1,
+    }));
+  };
 
   render() {
     const { pictures, status, error } = this.state
@@ -37,7 +58,7 @@ class ImageGallery extends Component {
 
 
     if (status === 'idle') {
-      return <div>Введите имя каринки</div>
+      return <h1>Введите имя каринки</h1>
     };
     
     if(status === 'pending') {
@@ -50,9 +71,12 @@ class ImageGallery extends Component {
 
     if (status === 'resolved') { 
       return (
+      <>
       <GalleryList>
-          <ImageGalleryItem pictures={pictures.hits} /> 
-      </GalleryList>     
+        <ImageGalleryItem pictures={pictures.hits} /> 
+      </GalleryList>  
+          <Button onLoadMore={() => this.onLoadMore()} />
+      </>    
       )
     }
   }}
