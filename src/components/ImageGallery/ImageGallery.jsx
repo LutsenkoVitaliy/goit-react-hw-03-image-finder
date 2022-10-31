@@ -24,9 +24,9 @@ class ImageGallery extends Component {
       this.setState({ status: 'pending' });
 
       api.fetchPixabayPicture(nextName)
-        .then(pictures => {
-          this.setState({ pictures, status: 'resolved' })
-          if (pictures.total === 0) {
+        .then(data => {
+          this.setState({ pictures: data.hits, status: 'resolved' })
+          if (data.total === 0) {
             return Promise.reject( new Error(`Фото с именем ${nextName} не найдены`))
           }
         })
@@ -54,7 +54,7 @@ class ImageGallery extends Component {
 
   render() {
     const { pictures, status, error } = this.state
-    console.log(pictures);
+    console.log(pictures.length);
 
 
     if (status === 'idle') {
@@ -73,9 +73,9 @@ class ImageGallery extends Component {
       return (
       <>
       <GalleryList>
-        <ImageGalleryItem pictures={pictures.hits} /> 
+        <ImageGalleryItem pictures={pictures} openModal={this.props.openModal}/> 
       </GalleryList>  
-          <Button onLoadMore={() => this.onLoadMore()} />
+          {pictures.length >= 12 && <Button onLoadMore={() => this.onLoadMore()} />}
       </>    
       )
     }
